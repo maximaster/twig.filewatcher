@@ -9,8 +9,6 @@ maximaster/twig.filewatcher
 -
 Подключается через composer как maximaster/twig.filewatcher
 
-Не зарегистрирован на packagist.org, нужно указать в конфигурации данный git-репозиторий.
-
 После подключения в проект необходимо создать собственный скрипт для file watcher'а, который должен сконфигурировать решение.
 
 Пример:
@@ -19,12 +17,12 @@ maximaster/twig.filewatcher
 <?php
 include_once __DIR__.'/vendor/autoload.php';
 
-use Maximaster\Tools\TwigFilewatcher;
+use Maximaster\Tools\Twig\Filewatcher;
 
-$watcher = new TwigFilewatcher;
+$watcher = new Filewatcher;
 $watcher
-    ->setContextFromFile(__DIR__.'/../twig/.context.php')
-    ->addExtension(new \MyVendor\MyProjectTwigExtension)
+    ->setGlobalsFromFile(__DIR__.'/../src/.context.php')
+    ->addExtension(new Maximaster\Tools\Twig\FilewatcherExtension)
     ->compile();
 ```
 
@@ -46,7 +44,7 @@ File &rarr; Settings &rarr; Tools &rarr; File Watchers &rarr; + &rarr; &lt;custo
 Принцип работы
 -
 Находит twig-файлы, находящиеся непосредственно в *директории исходников* и для каждого генерирует html-шаблон, сохраняя его в *директорию результатов*.
-В шаблоны передаются данные, которые можно задать методами `setContextFromFile`, `setContext`.
+В шаблоны передаются глобальные данные, которые можно задать в скрипте компиляции.
 В шаблонах можно использовать собственные функции и фильтры, если добавлять расширения через метод `addExtension`.
 
 
@@ -55,3 +53,9 @@ File &rarr; Settings &rarr; Tools &rarr; File Watchers &rarr; + &rarr; &lt;custo
 Директория результатов - рабочая директория (`<?php getcwd()`)
 
 Директория исходников - Директория результатов + /src
+
+Глобальные данные - задаются врунчюу (`setGlobals` или `setGlobalsFromFile`) + `['compiler' => ['filename' => имя файла шаблона]`
+
+Расширение FilewatcherExtension
+-
+Позволяет воспользоваться функцией `getMessage(code)` которая возвращает данные из глобального массива по адресу: `messages[compiler.filename].code` или `messages.default.code`

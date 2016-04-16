@@ -1,12 +1,12 @@
 <?php
-namespace Maximaster\Tools;
+namespace Maximaster\Tools\Twig;
 
 use Twig_Environment;
 use Twig_Loader_Filesystem;
 use Twig_ExtensionInterface;
 use Exception;
 
-class TwigFilewatcher
+class Filewatcher
 {
     /**
      * @var string Папка с twig-файлами
@@ -22,11 +22,6 @@ class TwigFilewatcher
      * @var Twig_Environment Объект twig-среды
      */
     protected $twig;
-
-    /**
-     * @var array Данные, передаваемые в шаблон
-     */
-    protected $context;
 
     /**
      * @var array Результаты выполнения
@@ -48,14 +43,14 @@ class TwigFilewatcher
     }
 
     /**
-     * Покдключает {$file} с массивом данных, передаваемых в шаблон
+     * Подключает {$file} с массивом данных, передаваемых во все шаблоны
      * Файл должен делать return array
      *
      * @param string $file Файл с данными
      * @return $this
      * @throws Exception Файл может быть не найден, не являться php-файлом или не возвращать массив как ожидается
      */
-    function setContextFromFile($file)
+    function setGlobalsFromFile($file)
     {
         if ( ! file_exists($file) ) {
             throw new Exception(__METHOD__." failed: file `{$file}` not found");
@@ -66,23 +61,25 @@ class TwigFilewatcher
         }
 
         /** @noinspection PhpIncludeInspection */
-        $this->context = include $file;
-        if ( ! is_array($this->context) ) {
+        $globals = include $file;
+        if ( ! is_array($globals) ) {
             throw new Exception(__METHOD__." failed: file `{$file}` does not return an array as expected");
         }
+
+        $this->setGlobals($globals);
 
         return $this;
     }
 
     /**
-     * Устанавливает данные, передаваемые в шаблон из массива
+     * Устанавливает данные, передаваемые во все шаблоны из массива
      *
-     * @param array $context
+     * @param array $globals
      * @return $this
      */
-    function setContext($context)
+    function setGlobals($globals)
     {
-        $this->context = $context;
+        array_map([$this->twig, 'addGlobal'], array_keys($globals), $globals);
         return $this;
     }
 
@@ -157,9 +154,13 @@ class TwigFilewatcher
 
             $template = $this->twig->loadTemplate($templatePath);
 
+            $this->twig->addGlobal('compiler', [
+                'filename' => $arPath['filename'],
+            ]);
+
             $bytesSaved = file_put_contents(
                 ($outputFile = $this->outputDir.'/'.$arPath['filename'].'.html'),
-                $template->render($this->context)
+                $template->render([])
             );
 
             $this->result[] = [

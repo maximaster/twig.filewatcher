@@ -1,5 +1,6 @@
 {
 	"name": "maximaster/twig.filewatcher",
+	"version": "1.0.0",
 	"description": "File watcher для преобразования Twig-шаблонов в HTML",
 	"keywords": ["file watcher", "twig"],
 	"license": "MIT",
