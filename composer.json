@@ -1,0 +1,25 @@
+{
+	"name": "maximaster/twig.filewatcher",
+	"description": "File watcher для преобразования Twig-шаблонов в HTML",
+	"keywords": ["file watcher", "twig"],
+	"license": "MIT",
+	"support": {
+		"www": "http://www.maximaster.ru",
+		"source": "https://github.com/maximaster/twig.filewatcher"
+	},
+	"authors": [
+		{
+			"name": "Лавриненко Максим",
+			"email": "maxim.lavrinenko@maximaster.ru"
+		}
+	],
+	"require": {
+		"php": ">=5.5.0",
+		"twig/twig": "v1.24.0"
+	},
+	"autoload": {
+		"psr-4": {
+			"Maximaster\\": "src/Maximaster/"
+		}
+	}
+}
