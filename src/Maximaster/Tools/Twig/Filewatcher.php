@@ -29,6 +29,21 @@ class Filewatcher
     protected $result;
 
     /**
+     * @var array Добавляемые к Twig расширения
+     */
+    protected $extensions = [];
+
+    /**
+     * @var array Опции работы twig-движка
+     */
+    protected $environmentOptions = [];
+
+    /**
+     * @var array Глобальные данные для twig'а
+     */
+    protected $globals;
+
+    /**
      * TwigFilewatcher constructor.
      * @param array $arTwigEnvOptions Опции для настойки Twig_Environment
      */
@@ -36,10 +51,7 @@ class Filewatcher
     {
         $this->outputDir = getcwd();
         $this->inputDir = $this->outputDir.'/src';
-
-        $this->twig = new Twig_Environment(new Twig_Loader_Filesystem($this->inputDir), $arTwigEnvOptions + [
-            'cache' => false,
-        ]);
+        $this->environmentOptions = $arTwigEnvOptions;
     }
 
     /**
@@ -79,12 +91,13 @@ class Filewatcher
      */
     function setGlobals($globals)
     {
-        array_map([$this->twig, 'addGlobal'], array_keys($globals), $globals);
+        $this->globals = $globals;
         return $this;
     }
 
     /**
      * Возвращает внутренний объект Twig_Environment
+     * Доступен только после compile()
      * @return Twig_Environment
      */
     function getEnvironment()
@@ -134,7 +147,7 @@ class Filewatcher
      */
     function addExtension(Twig_ExtensionInterface $twigExt)
     {
-        $this->twig->addExtension($twigExt);
+        $this->extensions[] = $twigExt;
         return $this;
     }
 
@@ -143,13 +156,20 @@ class Filewatcher
      */
     function compile()
     {
+        $this->twig = new Twig_Environment(new Twig_Loader_Filesystem($this->inputDir), $this->environmentOptions + [
+            'cache' => false,
+        ]);
+
+        array_map([$this->twig, 'addGlobal'], array_keys($this->globals), $this->globals);
+        array_map([$this->twig, 'addExtension'], $this->extensions);
+
         $this->result = [];
 
         // Т.к. один файл может зависеть от другого, нужно перегенерировать все, а не только изменённый файл
         foreach(scandir($this->inputDir) as $templatePath)
         {
             $arPath = pathinfo($templatePath);
-            if ( $arPath['extension'] !== 'twig' )
+            if ( ! isset($arPath['extension']) || $arPath['extension'] !== 'twig' )
                 continue;
 
             $template = $this->twig->loadTemplate($templatePath);

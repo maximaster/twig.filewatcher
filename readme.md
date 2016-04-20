@@ -18,11 +18,16 @@ maximaster/twig.filewatcher
 include_once __DIR__.'/vendor/autoload.php';
 
 use Maximaster\Tools\Twig\Filewatcher;
+use Maximaster\Tools\Twig\FilewatcherExtension;
+use Maximaster\Tools\Twig\WebpackExtension;
 
 $watcher = new Filewatcher;
 $watcher
-    ->setGlobalsFromFile(__DIR__.'/../src/.context.php')
-    ->addExtension(new Maximaster\Tools\Twig\FilewatcherExtension)
+    ->setInputDir(__DIR__.'/twig')
+    ->setOutputDir(realpath(__DIR__.'/../'))
+    ->setGlobalsFromFile(__DIR__.'/twig/.context.php')
+    ->addExtension(new FilewatcherExtension)
+    ->addExtension(new WebpackExtension(__DIR__.'/assets/build'))
     ->compile();
 ```
 
@@ -59,3 +64,7 @@ File &rarr; Settings &rarr; Tools &rarr; File Watchers &rarr; + &rarr; &lt;custo
 Расширение FilewatcherExtension
 -
 Позволяет воспользоваться функцией `getMessage(code)` которая возвращает данные из глобального массива по адресу: `messages[compiler.filename].code` или `messages.default.code`
+
+Расширение WebpackExtension
+-
+Позволяет воспользоваться функциями `showEntry` и `getEntry`, которые позволяют подключить файлы точки входа сгенерированной webpack'ом и получить их в виде массива соответственно.
