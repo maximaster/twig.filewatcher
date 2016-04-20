@@ -13,6 +13,11 @@ class WebpackExtension extends Twig_Extension
     protected $buildDir;
 
     /**
+     * @var string Префикс адреса при генерации ссылок на файлы точки входа
+     */
+    protected $webDir;
+
+    /**
      * @var array Массив для точек сборки
      */
     protected $entries = [];
@@ -27,9 +32,15 @@ class WebpackExtension extends Twig_Extension
         return self::$instance;
     }
 
-    function __construct($buildDir)
+    /**
+     * WebpackExtension constructor.
+     * @param string $buildDir Папка webpack
+     * @param string $webDir Префикс адреса
+     */
+    function __construct($buildDir, $webDir = '')
     {
         $this->buildDir = $buildDir;
+        $this->webDir = $webDir;
         self::$instance = $this;
     }
 
@@ -121,11 +132,11 @@ class WebpackExtension extends Twig_Extension
             switch(strtolower(pathinfo($file, PATHINFO_EXTENSION)))
             {
                 case 'js':
-                    ?><script src="<?=$file?>" type="text/javascript"></script><?php
+                    ?><script src="<?=$ext->webDir.$file?>" type="text/javascript"></script><?php
                     break;
 
                 case 'css':
-                    ?><link href="<?=$file?>" rel="stylesheet" type="text/css"><?php
+                    ?><link href="<?=$ext->webDir.$file?>" rel="stylesheet" type="text/css"><?php
                     break;
             }
         }
