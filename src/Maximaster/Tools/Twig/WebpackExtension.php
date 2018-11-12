@@ -22,6 +22,10 @@ class WebpackExtension extends Twig_Extension
      */
     protected $entries = [];
 
+    protected $manifestFilename = 'webpack-assets.json';
+
+    protected $debug = false;
+
     /**
      * @var self
      */
@@ -36,11 +40,15 @@ class WebpackExtension extends Twig_Extension
      * WebpackExtension constructor.
      * @param string $buildDir Папка webpack
      * @param string $webDir Префикс адреса
+     * @param string|null $manifestFilename Файл где перечисляются сгенерированные ресурсы по именам точек входа
      */
-    function __construct($buildDir, $webDir = '')
+    function __construct($buildDir, $webDir = '', $manifestFilename = null)
     {
         $this->buildDir = $buildDir;
         $this->webDir = $webDir;
+        if ($manifestFilename) {
+            $this->manifestFilename = $manifestFilename;
+        }
         self::$instance = $this;
     }
 
@@ -66,6 +74,10 @@ class WebpackExtension extends Twig_Extension
         return $functions;
     }
 
+    /**
+     * @return array
+     * @throws Exception
+     */
     static function getEntries()
     {
         $ext = self::getInstance();
@@ -74,7 +86,7 @@ class WebpackExtension extends Twig_Extension
             return $ext->entries;
         }
 
-        $jsonFile = $ext->buildDir.'/webpack-assets.json';
+        $jsonFile = "{$ext->buildDir}/{$ext->manifestFilename}";
         if ( ! is_file($jsonFile) ) {
             throw new Exception(__METHOD__." failed: `{$jsonFile}` not found");
         }
@@ -89,6 +101,7 @@ class WebpackExtension extends Twig_Extension
      * @param string $name Имя точки входа
      * @param string $type Фильтр по типу файла
      * @return array|bool Список файлов точки входа
+     * @throws Exception
      */
     static function getEntry($name, $type = null)
     {
@@ -123,9 +136,20 @@ class WebpackExtension extends Twig_Extension
     {
         $ext = self::getInstance();
 
-        $files = $ext->getEntry($name, $type);
-        if ( ! $files )
+        try {
+            $files = $ext->getEntry($name, $type);
+            if (!$files) {
+                if ($ext->debug) {
+                    ?><!-- entries not found --><?
+                }
+                return false;
+            }
+        } catch (Exception $e) {
+            if ($ext->debug) {
+                ?><!-- <?=$e->getMessage()?> --><?
+            }
             return false;
+        }
 
         ob_start();
         foreach($files as $file) {
@@ -143,5 +167,14 @@ class WebpackExtension extends Twig_Extension
         $html = ob_get_clean();
 
         return $html;
+    }
+
+    /**
+     * @return $this
+     */
+    public function enableDebug()
+    {
+        $this->debug = true;
+        return $this;
     }
 }
