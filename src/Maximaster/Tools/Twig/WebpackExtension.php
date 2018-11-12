@@ -140,13 +140,13 @@ class WebpackExtension extends Twig_Extension
             $files = $ext->getEntry($name, $type);
             if (!$files) {
                 if ($ext->debug) {
-                    ?><!-- entries not found --><?
+                    ?><!-- entries not found --><?php
                 }
                 return false;
             }
         } catch (Exception $e) {
             if ($ext->debug) {
-                ?><!-- <?=$e->getMessage()?> --><?
+                ?><!-- <?=$e->getMessage()?> --><?php
             }
             return false;
         }
